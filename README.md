@@ -57,6 +57,23 @@ client, pas une erreur.
 
 ### Héberger le volet
 
+**En production, le volet est servi par GitHub Pages :**
+
+```
+https://gcfiscalite.github.io/outlook-envoi-differe
+```
+
+C'est l'URL inscrite dans le paquet déployé. Un `git push` sur `main` met le
+volet à jour pour tous les postes en quelques secondes, sans rien redéployer
+dans le centre d'administration : le manifeste ne change pas, seuls les fichiers
+qu'il pointe changent. Il faut en revanche refabriquer et redéployer le paquet
+si on modifie le manifeste lui-même (bouton, libellés, permissions).
+
+Le dépôt est public parce que GitHub Pages l'exige sur un plan gratuit. Il ne
+contient que du HTML, du CSS et du JavaScript génériques : aucune donnée du
+cabinet, aucune clé, aucun secret. La clé privée du certificat local est
+exclue par `.gitignore`.
+
 `--base` désigne l'hôte du volet. Deux options :
 
 | | Serveur local | URL publique |
