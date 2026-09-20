@@ -158,9 +158,14 @@ if ($Mode -eq 'Distant') {
     Etape 'Serveur local'
 
     $scriptServeur = Join-Path $Outils 'serveur.py'
-    $pythonw = (Get-Command pythonw -ErrorAction SilentlyContinue).Source
-    if (-not $pythonw) {
-        $pythonw = Join-Path (Split-Path (Invoke-Py -c "import sys;print(sys.executable)")) 'pythonw.exe'
+    # On deduit pythonw de l'interpreteur reellement utilise, jamais de
+    # Get-Command : le PATH commence par l'alias WindowsApps, un simple relais
+    # vers le Python du Store qui ajoute un processus intermediaire.
+    $pythonw = Join-Path (Split-Path (Invoke-Py -c "import sys;print(sys.executable)")) 'pythonw.exe'
+    if (-not (Test-Path $pythonw)) {
+        $repli = (Get-Command pythonw -ErrorAction SilentlyContinue).Source
+        if ($repli -and $repli -notlike '*\WindowsApps\*') { $pythonw = $repli }
+        else { throw "pythonw.exe introuvable a cote de l'interpreteur Python." }
     }
     Info "pythonw : $pythonw"
 
@@ -175,14 +180,26 @@ if ($Mode -eq 'Distant') {
         -Force | Out-Null
     Succes "Tache planifiee creee : demarre a l'ouverture de session."
 
-    $dejaLa = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-    if (-not $dejaLa) {
-        Start-Process -FilePath $pythonw -ArgumentList "`"$scriptServeur`" --port $Port" -WindowStyle Hidden
-        Start-Sleep -Seconds 2
-        Succes 'Serveur demarre.'
-    } else {
-        Succes 'Serveur deja en ecoute.'
+    # On redemarre TOUJOURS le serveur : un processus deja en ecoute a charge son
+    # certificat au demarrage et continuerait a servir l'ancien apres une
+    # regeneration, ce qui fait echouer la verification TLS.
+    $enCours = Get-CimInstance Win32_Process -Filter "Name='pythonw.exe' OR Name='python.exe'" -ErrorAction SilentlyContinue |
+               Where-Object { $_.CommandLine -like '*serveur.py*' }
+    foreach ($proc in $enCours) {
+        Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue
+        Info "Ancien serveur arrete (PID $($proc.ProcessId))."
     }
+    if ($enCours) { Start-Sleep -Seconds 1 }
+
+    Start-Process -FilePath $pythonw -ArgumentList "`"$scriptServeur`" --port $Port" -WindowStyle Hidden
+
+    $ecoute = $null
+    for ($i = 0; $i -lt 10 -and -not $ecoute; $i++) {
+        Start-Sleep -Milliseconds 500
+        $ecoute = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+    }
+    if (-not $ecoute) { throw "Le serveur local n'ecoute pas sur le port $Port." }
+    Succes "Serveur demarre sur 127.0.0.1:$Port."
 }
 
 # ---------------------------------------------------------------- manifeste
