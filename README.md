@@ -25,62 +25,70 @@ envoi différé.
 
 ## Installation
 
-### Mode Distant (recommandé)
+Un complément Outlook ne s'installe **ni par le registre, ni par un dossier local** :
+il vit dans la boîte aux lettres Exchange. Deux points appris à la dure :
 
-Le volet est servi par une URL HTTPS publique. Rien à installer sur le poste à
-part le manifeste, et c'est le seul mode qui passe à l'échelle pour l'équipe.
+- la clé `HKCU\Software\Microsoft\Office\16.0\WEF\Developer` fonctionne pour
+  Word et Excel, **pas pour Outlook** ;
+- le manifeste **XML** est refusé par le centre d'administration Microsoft 365
+  (« Fichier de manifeste non valide », sans plus de détail, y compris pour un
+  manifeste minimal conforme au schéma publié). Seul le **manifeste unifié JSON**,
+  livré en .zip, passe la validation.
 
-```powershell
-.\tools\installer.ps1 -Mode Distant -UrlBase https://<hote>/outlook-envoi-differe
-```
-
-Le contenu de `src/` et `assets/` est déployé tel quel sur l'hôte. Le code est du
-HTML/CSS/JS statique sans backend : **aucun contenu de message ne quitte
-Outlook**, tout s'exécute dans le WebView du client.
-
-### Mode Local
-
-Le volet est servi par un petit serveur HTTPS qui ne répond que sur
-`127.0.0.1:3000`. Aucune dépendance externe, mais une installation par poste.
+### Fabriquer le paquet
 
 ```powershell
-.\tools\installer.ps1
+py -3.12 tools\generer_icones.py
+py -3.12 tools\fabriquer_paquet.py --base https://localhost:3000
 ```
 
-L'installeur génère un certificat auto-signé pour `localhost`, l'ajoute au
-magasin racine de l'utilisateur — **Windows demande confirmation une fois** —
-crée une tâche planifiée qui démarre le serveur à l'ouverture de session, puis
-inscrit le manifeste.
+Produit `paquet\envoi-programme.zip`, qui contient `manifest.json`, `color.png` et
+`outline.png` à la racine de l'archive.
 
-### Dans les deux cas
+### Déployer
 
-Le manifeste est chargé par la clé de sideload d'Office, sans passer par le
-centre d'administration :
+Centre d'administration Microsoft 365 → **Paramètres** → **Applications intégrées**
+→ **Charger les applications personnalisées** → type **Application Teams** →
+choisir le .zip → **Seulement moi** (ou les utilisateurs visés).
 
-```
-HKCU\Software\Microsoft\Office\16.0\WEF\Developer
-    GCFiscalite.EnvoiProgramme = <chemin>\manifest.xml
-```
+Le complément apparaît dans Outlook sur le web en quelques minutes. Dans Outlook
+classique, la propagation peut prendre jusqu'à 24 heures : c'est le cache du
+client, pas une erreur.
 
-**Outlook doit être fermé et rouvert** pour relire un manifeste. Il met parfois
-jusqu'à une heure, et dans le pire des cas 24 h, à prendre en compte un
-changement de manifeste : c'est pour cette raison que `generer_manifeste.py`
-incrémente le numéro de version à chaque génération.
+### Héberger le volet
+
+`--base` désigne l'hôte du volet. Deux options :
+
+| | Serveur local | URL publique |
+|---|---|---|
+| Commande | `tools\installer.ps1` | héberger `src/` et `assets/` |
+| Ce qui sort du poste | rien | rien non plus, le code est statique |
+| Fonctionne sur | le poste qui héberge | tous les postes, OWA, mobile |
+| À installer par poste | certificat + tâche planifiée | rien |
+
+Le mode local suffit pour un poste et se monte avec `tools\installer.ps1`, qui
+génère un certificat pour `localhost`, l'ajoute au magasin racine de l'utilisateur
+(Windows demande confirmation une fois) et crée une tâche planifiée qui démarre le
+serveur à l'ouverture de session. Pour plusieurs utilisateurs, une URL publique
+est le bon choix : le manifeste étant déployé par le tenant, `localhost` ne
+répondrait sur aucun autre poste.
 
 ### Désinstallation
+
+Le complément se retire depuis la même page du centre d'administration. Pour le
+serveur local et son certificat :
 
 ```powershell
 .\tools\installer.ps1 -Desinstaller
 ```
-
-Retire la clé de registre, la tâche planifiée, le serveur et le certificat.
 
 ## Développement
 
 | Commande | Rôle |
 |---|---|
 | `py -3.12 tools\apercu.py` | Banc d'essai hors Outlook, sur `http://127.0.0.1:3100/tools/apercu/index.html` |
-| `py -3.12 tools\generer_manifeste.py --base <url>` | Fabrique `manifest.xml` |
+| `py -3.12 tools\fabriquer_paquet.py --base <url>` | Fabrique le paquet .zip a deployer |
+| `py -3.12 tools\generer_manifeste.py --base <url>` | Fabrique `manifest.xml` (ancien format, refuse par le portail) |
 | `py -3.12 tools\verifier.py` | Contrôle le manifeste et l'accessibilité de ses URL |
 | `py -3.12 tools\generer_icones.py` | Régénère les icônes |
 | `py -3.12 tools\serveur.py` | Serveur HTTPS local |

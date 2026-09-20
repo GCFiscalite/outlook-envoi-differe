@@ -50,12 +50,41 @@ def dessiner(taille: int) -> Image.Image:
     return img.resize((taille, taille), Image.LANCZOS)
 
 
+def dessiner_contour(taille: int) -> Image.Image:
+    """Icone « outline » du paquet : monochrome blanche sur fond transparent.
+
+    Le manifeste unifie l'exige a cote de l'icone couleur ; Office la recolore
+    selon le theme, donc seule la silhouette compte.
+    """
+    c = taille * SUR
+    img = Image.new("RGBA", (c, c), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+
+    marge = c * 0.09
+    trait = max(1, int(c * 0.08))
+    d.ellipse([marge, marge, c - marge, c - marge], outline=BLANC, width=trait)
+
+    centre = c / 2
+    rayon = centre - marge
+    d.line([centre, centre, centre, centre - rayon * 0.60], fill=BLANC, width=trait)
+    d.line([centre, centre, centre + rayon * 0.34, centre + rayon * 0.30],
+           fill=BLANC, width=trait)
+
+    return img.resize((taille, taille), Image.LANCZOS)
+
+
 def main() -> None:
     DESTINATION.mkdir(parents=True, exist_ok=True)
     for taille in TAILLES:
         chemin = DESTINATION / f"icone-{taille}.png"
         dessiner(taille).save(chemin, "PNG")
         print(f"  {chemin.name}")
+
+    # Les deux icones du paquet .zip du manifeste unifie.
+    dessiner(192).save(DESTINATION / "color.png", "PNG")
+    print("  color.png (192)")
+    dessiner_contour(32).save(DESTINATION / "outline.png", "PNG")
+    print("  outline.png (32, monochrome)")
 
 
 if __name__ == "__main__":

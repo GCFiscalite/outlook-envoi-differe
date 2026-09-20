@@ -1,0 +1,136 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v__SCHEMA__/MicrosoftTeams.schema.json",
+  "manifestVersion": "__SCHEMA__",
+  "id": "f6587219-0f09-4f31-9fb5-6c5123ca2af9",
+  "version": "__VERSION__",
+  "name": {
+    "short": "Envoi programmé",
+    "full": "Envoi programmé côté serveur pour Outlook"
+  },
+  "description": {
+    "short": "Programme l'envoi d'un message, même si Outlook est fermé.",
+    "full": "Ajoute un bouton « Programmer l'envoi » à la fenêtre de rédaction. Contrairement à l'option native « Ne pas envoyer avant », le délai est traité par Exchange et non par Outlook : le message part à l'heure choisie même si Outlook est fermé et le poste éteint."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#554D4A",
+  "developer": {
+    "name": "GC Fiscalité",
+    "websiteUrl": "https://gcfiscalite.com",
+    "privacyUrl": "https://gcfiscalite.com",
+    "termsOfUseUrl": "https://gcfiscalite.com"
+  },
+  "localizationInfo": {
+    "defaultLanguageTag": "fr-ca"
+  },
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "Mailbox.ReadWrite.User",
+          "type": "Delegated"
+        }
+      ]
+    }
+  },
+  "extensions": [
+    {
+      "requirements": {
+        "scopes": [
+          "mail"
+        ],
+        "capabilities": [
+          {
+            "name": "Mailbox",
+            "minVersion": "1.13"
+          }
+        ]
+      },
+      "runtimes": [
+        {
+          "requirements": {
+            "capabilities": [
+              {
+                "name": "Mailbox",
+                "minVersion": "1.13"
+              }
+            ]
+          },
+          "id": "VoletEnvoiProgramme",
+          "type": "general",
+          "code": {
+            "page": "__BASE__/src/taskpane.html"
+          },
+          "lifetime": "short",
+          "actions": [
+            {
+              "id": "AfficherVolet",
+              "type": "openPage",
+              "view": "programmation"
+            }
+          ]
+        }
+      ],
+      "ribbons": [
+        {
+          "contexts": [
+            "mailCompose"
+          ],
+          "tabs": [
+            {
+              "builtInTabId": "TabDefault",
+              "groups": [
+                {
+                  "id": "grpEnvoiProgramme",
+                  "label": "Envoi programmé",
+                  "icons": [
+                    {
+                      "size": 16,
+                      "url": "__BASE__/assets/icone-16.png"
+                    },
+                    {
+                      "size": 32,
+                      "url": "__BASE__/assets/icone-32.png"
+                    },
+                    {
+                      "size": 80,
+                      "url": "__BASE__/assets/icone-80.png"
+                    }
+                  ],
+                  "controls": [
+                    {
+                      "id": "btnEnvoiProgramme",
+                      "type": "button",
+                      "label": "Programmer l'envoi",
+                      "icons": [
+                        {
+                          "size": 16,
+                          "url": "__BASE__/assets/icone-16.png"
+                        },
+                        {
+                          "size": 32,
+                          "url": "__BASE__/assets/icone-32.png"
+                        },
+                        {
+                          "size": 80,
+                          "url": "__BASE__/assets/icone-80.png"
+                        }
+                      ],
+                      "supertip": {
+                        "title": "Programmer l'envoi",
+                        "description": "Choisir la date et l'heure de livraison. Exchange envoie le message à l'heure prévue, même si Outlook est fermé."
+                      },
+                      "actionId": "AfficherVolet"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
