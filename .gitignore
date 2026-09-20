@@ -1,0 +1,7 @@
+# Certificat et CLE PRIVEE du serveur local : propres au poste, jamais versionnes
+tools/cert/
+
+# Fichiers produits
+manifest.xml
+tools/apercu/index.html
+*.log

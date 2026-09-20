@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Envoi programmé</title>
+<link rel="stylesheet" href="taskpane.css?v=1">
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+</head>
+<body>
+
+<div id="chargement" class="etat-bloc">
+  <p>Chargement…</p>
+</div>
+
+<div id="incompatible" class="etat-bloc masque">
+  <h1>Version d'Outlook trop ancienne</h1>
+  <p>L'envoi programmé côté serveur exige Outlook 2304 (build 16327.20248) ou plus récent,
+     avec un compte Microsoft&nbsp;365 / Exchange Online.</p>
+  <p class="detail" id="incompatible-detail"></p>
+</div>
+
+<main id="app" class="masque">
+
+  <div id="statut" class="statut statut-aucun">
+    <span class="statut-puce"></span>
+    <span id="statut-texte">Ce message partira dès que vous cliquerez sur Envoyer.</span>
+  </div>
+
+  <section>
+    <h2>Choix rapides</h2>
+    <div class="rapides" id="rapides"></div>
+  </section>
+
+  <section>
+    <h2>Date et heure précises</h2>
+    <div class="champs">
+      <label for="date">Date</label>
+      <input type="date" id="date">
+      <label for="heure">Heure</label>
+      <input type="time" id="heure" step="300">
+    </div>
+    <button id="programmer" class="bouton bouton-principal">Programmer l'envoi</button>
+  </section>
+
+  <button id="annuler" class="bouton bouton-secondaire masque">Retirer la programmation</button>
+
+  <p id="message" class="message masque"></p>
+
+  <section class="avertissement">
+    <h2>À savoir</h2>
+    <ul>
+      <li><strong>Vous devez quand même cliquer sur Envoyer.</strong> La programmation seule
+          n'envoie rien.</li>
+      <li>Exchange garde le message et le livre à l'heure choisie, <strong>même si Outlook
+          est fermé et le poste éteint</strong>.</li>
+      <li>Une fois Envoyer cliqué, le message file dans <em>Éléments envoyés</em> et
+          <strong>ne peut plus être modifié ni annulé</strong> depuis Outlook classique.</li>
+    </ul>
+  </section>
+
+  <p class="pied">GC Fiscalité &middot; envoi programmé <span id="version"></span></p>
+</main>
+
+<script src="taskpane.js?v=1"></script>
+</body>
+</html>
