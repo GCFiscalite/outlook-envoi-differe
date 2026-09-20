@@ -70,6 +70,16 @@ def verifier_structure(racine: ET.Element) -> None:
     if not re.fullmatch(r"\d+(\.\d+){1,3}", version):
         echec(f"Version mal formee : {version!r}")
 
+    # Piege coute cher : un VersionOverrides V1_0 sans Hosts ni Resources est
+    # rejete par Outlook en silence, le bouton n'apparait simplement jamais.
+    surcharges = [e for e in racine if nom_local(e.tag) == "VersionOverrides"]
+    if surcharges:
+        dedans = [nom_local(e.tag) for e in surcharges[0]]
+        for requis in ("Requirements", "Hosts", "Resources"):
+            if requis not in dedans:
+                echec(f"<VersionOverrides> ne contient pas <{requis}> : "
+                      f"Outlook rejettera le manifeste sans message d'erreur")
+
     permissions = racine.findtext(f"{NS}Permissions", "")
     if permissions != "ReadWriteItem":
         echec(f"Permissions devrait valoir ReadWriteItem, pas {permissions!r} "
